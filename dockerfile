@@ -1,33 +1,31 @@
+FROM python:3.10-alpine
 
-
-FROM python:3.10-slim
-
-# Définir le répertoire de travail
+# Set the working directory
 WORKDIR /app
 
-# Installer les dépendances système requises pour Selenium + Chrome
-RUN apt-get update && apt-get install -y \
+# Install necessary system dependencies for Selenium + Chrome
+RUN apk update && apk add --no-cache \
     wget \
     unzip \
     curl \
     gnupg \
-    && rm -rf /var/lib/apt/lists/*
+    chromium \
+    && rm -rf /var/cache/apk/*
 
-# Ajouter la clé et installer Google Chrome
-RUN curl -fsSL https://dl.google.com/linux/linux_signing_key.pub | apt-key add - \
-    && echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" | tee /etc/apt/sources.list.d/google-chrome.list \
+# Install Google Chrome
+RUN curl -fsSL https://dl.google.com/linux/linux_signing_key.pub | gpg --dearmor > /usr/share/keyrings/google-archive-keyring.gpg \
+    && echo "deb [signed-by=/usr/share/keyrings/google-archive-keyring.gpg] http://dl.google.com/linux/chrome/deb/ stable main" | tee /etc/apt/sources.list.d/google-chrome.list \
     && apt-get update \
     && apt-get install -y google-chrome-stable \
     && rm -rf /var/lib/apt/lists/*
 
-# Télécharger et installer ChromeDriver (Version correspondant à Chrome)
+# Download and install ChromeDriver
 RUN CHROMEDRIVER_VERSION=$(curl -sS chromedriver.storage.googleapis.com/LATEST_RELEASE) && \
     wget -q "https://chromedriver.storage.googleapis.com/${CHROMEDRIVER_VERSION}/chromedriver_linux64.zip" -O chromedriver.zip && \
     unzip chromedriver.zip && \
     mv chromedriver /usr/local/bin/ && \
     chmod +x /usr/local/bin/chromedriver && \
     rm chromedriver.zip
-
 
 # Copy Python dependencies
 COPY requirements.txt .
@@ -40,4 +38,3 @@ COPY . /app
 
 # Run the application
 CMD ["python", "automate.py"]
-
