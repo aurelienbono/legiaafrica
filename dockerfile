@@ -33,8 +33,7 @@ COPY requirements.txt .
 
 RUN pip install --no-cache-dir -r requirements.txt 
 
-# Copier le code source
-COPY . .d
+COPY . /app
 
 # Lancer l'application
 CMD ["python", "automate.py"]
