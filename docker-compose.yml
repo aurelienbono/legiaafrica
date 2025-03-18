@@ -9,6 +9,6 @@ services:
     restart: always
     volumes:
       - .:/app
-      - ./telechargements:/app/telechargements  # Persist downloaded files
+      - ./telechargements:/app/telechargements  
     working_dir: /app
     command: python automate.py
