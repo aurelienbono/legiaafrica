@@ -12,6 +12,7 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from webdriver_manager.chrome import ChromeDriverManager
+from multiprocessing import Process
 import logging
 
 # Configurer les logs
@@ -72,16 +73,18 @@ prefs = {
 }
 options.add_experimental_option("prefs", prefs)
 
-# Ensure unique user data directory
-user_data_dir = f"/tmp/user_data_{generation_of_unique_number()}"
-options.add_argument(f"--user-data-dir={user_data_dir}")
-
 # Initialisation du driver
 logging.info(f"📌 Téléchargement du chrome driver")
 service = Service(ChromeDriverManager().install())
 
-def process_df_part(df_part):
-    driver = webdriver.Chrome(service=service, options=options)
+def setup_driver():
+    """Configure et retourne un driver Selenium avec un répertoire utilisateur unique"""
+    user_data_dir = f"/tmp/user_data_{generation_of_unique_number()}"
+    options.add_argument(f"--user-data-dir={user_data_dir}")
+    return webdriver.Chrome(service=service, options=options)
+
+def process_df_part(df_part, output_file):
+    driver = setup_driver()
     try:
         driver.get("https://legiafrica.com/login")
         wait = WebDriverWait(driver, 5)
@@ -141,11 +144,23 @@ def process_df_part(df_part):
                     logging.error(f"❌ Aucun lien PDF trouvé pour {url}")
 
         df_part["PDF_PATH"] = paths
-        df_part.to_csv(f"data/split/jurisprudence_part_{df_part.index[0] // len(df) + 1}.csv", index=False)
+        df_part.to_csv(output_file, index=False)
 
     finally:
         driver.quit()
 
-# Traitement séquentiel des parties du DataFrame
-for df_part in df_split:
-    process_df_part(df_part)
+if __name__ == "__main__":
+    processes = []
+
+    # Lancer 4 processus en parallèle
+    for i, df_part in enumerate(df_split):
+        output_path = f"data/split/jurisprudence_part_{i+1}.csv"
+        p = Process(target=process_df_part, args=(df_part, output_path))
+        p.start()
+        processes.append(p)
+
+    # Attendre la fin des processus
+    for p in processes:
+        p.join()
+
+    print("Téléchargement terminé pour toutes les parties.")
