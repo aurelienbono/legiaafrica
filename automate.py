@@ -55,7 +55,7 @@ os.makedirs(download_dir, exist_ok=True)
 # 📌 Configuration de Selenium
 options = Options()
 options.add_argument("--disable-notifications")
-
+options.add_argument("--headless")
 prefs = {
     "download.default_directory": download_dir,
     "download.prompt_for_download": False,
