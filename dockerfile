@@ -1,16 +1,16 @@
-FROM python:3.10-alpine
+FROM python:3.10-slim
 
 # Set the working directory
 WORKDIR /app
 
 # Install necessary system dependencies for Selenium + Chrome
-RUN apk update && apk add --no-cache \
+RUN apt-get update && apt-get install -y \
     wget \
     unzip \
     curl \
     gnupg \
     chromium \
-    && rm -rf /var/cache/apk/*
+    && rm -rf /var/lib/apt/lists/*
 
 # Install Google Chrome
 RUN curl -fsSL https://dl.google.com/linux/linux_signing_key.pub | gpg --dearmor > /usr/share/keyrings/google-archive-keyring.gpg \
