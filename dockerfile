@@ -9,7 +9,7 @@ RUN apt-get update && apt-get install -y \
     unzip \
     curl \
     gnupg \
-    chromium \
+    chromium-driver \
     && rm -rf /var/lib/apt/lists/*
 
 # Install Google Chrome
