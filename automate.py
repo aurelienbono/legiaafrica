@@ -62,6 +62,7 @@ prefs = {
 options.add_experimental_option("prefs", prefs)
 
 service = Service(ChromeDriverManager().install())
+# service = Service('chromedriver.exe')
 
 
 
