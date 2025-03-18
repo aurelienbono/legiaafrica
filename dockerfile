@@ -22,6 +22,7 @@ RUN apt-get update && apt-get install -y \
     xvfb \
     ca-certificates \
     libasound2 \
+    xdg-utils \  
     && rm -rf /var/lib/apt/lists/*
 
 # Étape 3 : Télécharger et installer Google Chrome stable
@@ -31,19 +32,4 @@ RUN apt --fix-broken install -y
 
 # Étape 4 : Télécharger la dernière version de ChromeDriver
 RUN LATEST_VERSION=$(wget -q -O - https://chromedriver.storage.googleapis.com/LATEST_RELEASE) && \
-    wget https://chromedriver.storage.googleapis.com/$LATEST_VERSION/chromedriver_linux64.zip && \
-    unzip chromedriver_linux64.zip -d /usr/local/bin && \
-    rm chromedriver_linux64.zip
-
-# Étape 5 : Installer les dépendances Python pour Selenium
-COPY requirements.txt /app/
-RUN pip install --no-cache-dir -r /app/requirements.txt
-
-# Étape 6 : Copier votre code Selenium dans le conteneur
-COPY . /app/
-
-# Étape 7 : Définir le répertoire de travail
-WORKDIR /app
-
-# Étape 8 : Exécuter votre code Selenium
-CMD ["python", "automate.py"]
+    wget https://
