@@ -44,10 +44,13 @@ def download_jurisprudence_pdf(url):
 # Load URLs from CSV
 df = pd.read_csv("data/legiafrica-jurisprudence.csv")
 
-
 # Create download directory if it doesn't exist
 download_dir = os.path.join(os.getcwd(), "telechargements")
 os.makedirs(download_dir, exist_ok=True)
+
+# Ensure a unique user data directory for each run
+user_data_dir = os.path.join(download_dir, f'user_data_{time.time()}')
+os.makedirs(user_data_dir, exist_ok=True)
 
 # Configure Selenium
 options = Options()
@@ -60,12 +63,9 @@ prefs = {
     "safebrowsing.enabled": True
 }
 options.add_experimental_option("prefs", prefs)
-options.add_argument(f"--user-data-dir={os.path.join(download_dir, 'user_data')}")
+options.add_argument(f"--user-data-dir={user_data_dir}")
 
 service = Service(ChromeDriverManager().install())
-# service = Service('chromedriver.exe')
-
-
 
 driver = webdriver.Chrome(service=service, options=options)
 try:
@@ -76,8 +76,7 @@ try:
     password_input = wait.until(EC.presence_of_element_located((By.XPATH, '//*[@id="password-field"]')))
     email_input.send_keys("jurisintelligencework@gmail.com")
     password_input.send_keys("JurisIntelligence@2024")
-    
-    
+
     login_button = wait.until(EC.element_to_be_clickable((By.XPATH, '//*[@id="loginModal"]/div/div/div/div[1]/div[2]/form/div/button')))
     login_button.click()
     logger.info("Connexion réussie")
@@ -114,7 +113,7 @@ try:
                 download_jurisprudence_pdf(pdf_link)
             else:
                 logger.error(f"❌ Aucun lien PDF trouvé pour {url}")
-                
+
     df["PDF_PATH"] = paths
     df.to_csv(f"data/split/jurisprudence_part_{df.index[0] // len(df) + 1}.csv", index=False)
 finally:
