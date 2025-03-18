@@ -60,6 +60,7 @@ prefs = {
     "safebrowsing.enabled": True
 }
 options.add_experimental_option("prefs", prefs)
+options.add_argument(f"--user-data-dir={os.path.join(download_dir, 'user_data')}")
 
 service = Service(ChromeDriverManager().install())
 # service = Service('chromedriver.exe')
