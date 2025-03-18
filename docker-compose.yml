@@ -1,0 +1,14 @@
+version: '3.8'
+
+services:
+  selenium:
+    build: .
+    container_name: selenium-container
+    ports:
+      - "4444:4444"  # Expose le port pour interagir avec Selenium
+    volumes:
+      - .:/app  # Monte le répertoire de travail local dans le conteneur
+    environment:
+      - DISPLAY=:99  # Nécessaire pour Xvfb (serveur X virtuel)
+    entrypoint: ["python", "automate.py"]  # Commande à exécuter au démarrage
+    tty: true  # Permet de garder le conteneur en vie
