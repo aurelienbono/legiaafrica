@@ -1,6 +1,3 @@
-
-
-
 import os
 import random
 import requests
@@ -75,8 +72,11 @@ prefs = {
 }
 options.add_experimental_option("prefs", prefs)
 
+# Ensure unique user data directory
+user_data_dir = f"/tmp/user_data_{generation_of_unique_number()}"
+options.add_argument(f"--user-data-dir={user_data_dir}")
+
 # Initialisation du driver
-# service = Service('chromedriver.exe')
 logging.info(f"📌 Téléchargement du chrome driver")
 service = Service(ChromeDriverManager().install())
 
@@ -134,7 +134,7 @@ def process_df_part(df_part):
                 if pdf_link:
                     logging.info(f"📄 Lien PDF trouvé avec BeautifulSoup : {pdf_link}")
                     if not pdf_link.startswith("http"):
-                        pdf_link = "https://legiafrica.com" + pdf_link   
+                        pdf_link = "https://legiafrica.com" + pdf_link
 
                     download_jurisprudence_pdf(pdf_link)
                 else:
