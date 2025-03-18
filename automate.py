@@ -76,7 +76,8 @@ def process_df_part(df_part):
         password_input = wait.until(EC.presence_of_element_located((By.XPATH, '//*[@id="password-field"]')))
         email_input.send_keys("jurisintelligencework@gmail.com")
         password_input.send_keys("JurisIntelligence@2024")
-
+        
+        
         login_button = wait.until(EC.element_to_be_clickable((By.XPATH, '//*[@id="loginModal"]/div/div/div/div[1]/div[2]/form/div/button')))
         login_button.click()
         logger.info("Connexion réussie")
