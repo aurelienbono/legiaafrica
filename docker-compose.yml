@@ -4,6 +4,6 @@ services:
   selenium:
     build:
       context: .
-      dockerfile: Dockerfile
+      dockerfile: dockerfile
     container_name: selenium_scrapper_agent_manager_on_web
     restart: always
