@@ -44,8 +44,6 @@ def download_jurisprudence_pdf(url):
 # Load URLs from CSV
 df = pd.read_csv("data/legiafrica-jurisprudence.csv")
 
-# Split DataFrame into 4 parts
-df_split = [df[i::4] for i in range(4)]
 
 # Create download directory if it doesn't exist
 download_dir = os.path.join(os.getcwd(), "telechargements")
@@ -65,72 +63,57 @@ options.add_experimental_option("prefs", prefs)
 
 service = Service(ChromeDriverManager().install())
 
-def process_df_part(df_part):
-    driver = webdriver.Chrome(service=service, options=options)
-    try:
-        driver.get("https://legiafrica.com/login")
-        wait = WebDriverWait(driver, 10)
 
-        # Login to the site
-        email_input = wait.until(EC.presence_of_element_located((By.XPATH, '//*[@id="email-field"]')))
-        password_input = wait.until(EC.presence_of_element_located((By.XPATH, '//*[@id="password-field"]')))
-        email_input.send_keys("jurisintelligencework@gmail.com")
-        password_input.send_keys("JurisIntelligence@2024")
-        
-        
-        login_button = wait.until(EC.element_to_be_clickable((By.XPATH, '//*[@id="loginModal"]/div/div/div/div[1]/div[2]/form/div/button')))
-        login_button.click()
-        logger.info("Connexion réussie")
 
-        time.sleep(1)
-
-        paths = []
-
-        # Process documents in the database
-        for index, row in tqdm(df_part.iterrows(), total=df_part.shape[0]):
-            url = row["DETAILS_LINK"]
-            driver.get(url)
+driver = webdriver.Chrome(service=service, options=options)
+try:
+    driver.get("https://legiafrica.com/login")
+    wait = WebDriverWait(driver, 10)
+    # Login to the site
+    email_input = wait.until(EC.presence_of_element_located((By.XPATH, '//*[@id="email-field"]')))
+    password_input = wait.until(EC.presence_of_element_located((By.XPATH, '//*[@id="password-field"]')))
+    email_input.send_keys("jurisintelligencework@gmail.com")
+    password_input.send_keys("JurisIntelligence@2024")
+    
+    
+    login_button = wait.until(EC.element_to_be_clickable((By.XPATH, '//*[@id="loginModal"]/div/div/div/div[1]/div[2]/form/div/button')))
+    login_button.click()
+    logger.info("Connexion réussie")
+    time.sleep(1)
+    paths = []
+    # Process documents in the database
+    for index, row in tqdm(df.iterrows(), total=df.shape[0]):
+        url = row["DETAILS_LINK"]
+        driver.get(url)
+        time.sleep(2)
+        try:
+            # Check if the download button exists
+            download_button = wait.until(EC.element_to_be_clickable((By.CSS_SELECTOR, 'button.legiafrica-btn.report')))
+            download_button.click()
             time.sleep(2)
-
-            try:
-                # Check if the download button exists
-                download_button = wait.until(EC.element_to_be_clickable((By.CSS_SELECTOR, 'button.legiafrica-btn.report')))
-                download_button.click()
-                time.sleep(2)
-
-                # Get the current URL after the click
-                current_url = driver.current_url
-                logger.info(f"📄 PDF détecté via bouton : {current_url}")
-                download_jurisprudence_pdf(current_url)
-
-            except Exception as e:
-                logger.warning(f"⚠️ Bouton de téléchargement non trouvé pour {url}. Tentative avec BeautifulSoup...")
-
-                # Use BeautifulSoup to get an alternative link
-                page_source = driver.page_source
-                soup = BeautifulSoup(page_source, 'html.parser')
-
-                pdf_link = None
-                for link in soup.find_all("a"):
-                    if "Télécharger" in link.text or "télécharger" in link.text:
-                        pdf_link = link.get("href")
-                        break  # Take the first link found
-
-                if pdf_link:
-                    logger.info(f"📄 Lien PDF trouvé avec BeautifulSoup : {pdf_link}")
-                    if not pdf_link.startswith("http"):
-                        pdf_link = "https://legiafrica.com" + pdf_link
-
-                    download_jurisprudence_pdf(pdf_link)
-                else:
-                    logger.error(f"❌ Aucun lien PDF trouvé pour {url}")
-
-        df_part["PDF_PATH"] = paths
-        df_part.to_csv(f"data/split/jurisprudence_part_{df_part.index[0] // len(df) + 1}.csv", index=False)
-
-    finally:
-        driver.quit()
-
-# Execute tasks in parallel
-with ThreadPoolExecutor(max_workers=4) as executor:
-    executor.map(process_df_part, df_split)
+            # Get the current URL after the click
+            current_url = driver.current_url
+            logger.info(f"📄 PDF détecté via bouton : {current_url}")
+            download_jurisprudence_pdf(current_url)
+        except Exception as e:
+            logger.warning(f"⚠️ Bouton de téléchargement non trouvé pour {url}. Tentative avec BeautifulSoup...")
+            # Use BeautifulSoup to get an alternative link
+            page_source = driver.page_source
+            soup = BeautifulSoup(page_source, 'html.parser')
+            pdf_link = None
+            for link in soup.find_all("a"):
+                if "Télécharger" in link.text or "télécharger" in link.text:
+                    pdf_link = link.get("href")
+                    break  # Take the first link found
+            if pdf_link:
+                logger.info(f"📄 Lien PDF trouvé avec BeautifulSoup : {pdf_link}")
+                if not pdf_link.startswith("http"):
+                    pdf_link = "https://legiafrica.com" + pdf_link
+                download_jurisprudence_pdf(pdf_link)
+            else:
+                logger.error(f"❌ Aucun lien PDF trouvé pour {url}")
+                
+    df["PDF_PATH"] = paths
+    df.to_csv(f"data/split/jurisprudence_part_{df.index[0] // len(df) + 1}.csv", index=False)
+finally:
+    driver.quit()
